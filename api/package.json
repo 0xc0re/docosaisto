@@ -1,0 +1,13 @@
+{
+  "name": "sbaitso-audio-generator",
+  "version": "1.0.0",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "execa": "^5.1.1",
+    "express": "^4.17.1",
+    "mkdirp": "^1.0.4",
+    "on-finished": "^2.4.1",
+    "rimraf": "^3.0.2",
+    "uuid": "^9.0.0"
+  }
+}

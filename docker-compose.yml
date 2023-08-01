@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  sbaitso-api:
+    build:
+      context: ./api
+    ports:
+      - "8080:3000"
+    environment:
+      - TERM=xterm
+    volumes:
+      - ./api/sbaitso:/sbaitso
+  
