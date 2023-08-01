@@ -46,9 +46,11 @@ body, input, button {
   color: #ffc107;
 }
 
-
 #sbaitso-image {
-  max-width: 300px; /* Adjust the width as needed */
-  margin: 20px auto; /* Center the image horizontally */
+  max-width: 60%; /* Increase the image size */
 }
 
+.custom-controls {
+  max-width: 70%; /* Width for the text box, generate button, and audio controls */
+  margin: 0 auto; /* Center the controls */
+}
