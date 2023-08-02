@@ -9,7 +9,7 @@ $(document).ready(function () {
 
     $('#spinner-overlay').css('display', 'flex'); // Show spinner overlay with flex
 
-    fetch('https://sbaitso.merle.io/generate/audio', {
+    fetch('/generate/audio', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
