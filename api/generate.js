@@ -7,6 +7,7 @@ const uuid = require('uuid');
 async function generateAudio(text) {
     const requestId = uuid.v4(); // Unique ID for this request
     const requestPath = `/tmp/sbaitso/${requestId}`;
+    const sinkName = `sink_${requestId}`; // Unique sink name for this request
 
     try {
         console.log(`Starting generation process for request ${requestId}...`);
@@ -14,6 +15,14 @@ async function generateAudio(text) {
         // Remove the out dir and make a new one specific to this request
         rimraf.sync(requestPath);
         mkdirp.sync(requestPath);
+        
+        // Create a new virtual sink for this request
+        console.log(`Creating PulseAudio virtual sink: ${sinkName}`);
+        await execa('pacmd', ['load-module', 'module-virtual-sink', `sink_name=${sinkName}`]);
+
+        // Set the newly created virtual sink as the default
+        console.log(`Setting ${sinkName} as the default PulseAudio sink`);
+        await execa('pacmd', ['set-default-sink', sinkName]);
 
         console.log(`Starting DOSBox to run SAY.BAT with text: "${text}"...`);
         const dosbox = execa(
@@ -28,7 +37,7 @@ async function generateAudio(text) {
         console.log("Waiting for DOSBox to start speaking...");
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        // Start the ffmpeg capture to an audio file
+        // Start the ffmpeg capture to an audio file from the specific sink
         const audioPath = path.join(requestPath, 'out.mp3');
         console.log("Starting the ffmpeg capture to an audio file...");
         const recording = execa('ffmpeg', [
@@ -36,7 +45,7 @@ async function generateAudio(text) {
             '-f',
             'pulse',
             '-i',
-            'v1.monitor',
+            `${sinkName}.monitor`, // Capture from the specific sink
             '-c:a',
             'libmp3lame',
             audioPath,
@@ -59,6 +68,10 @@ async function generateAudio(text) {
             'afade=in:st=0:d=0.1', // 0.1-second fade-in at the start
             processedAudioPath,
         ]);
+
+        // Unload the virtual sink
+        console.log(`Unloading PulseAudio virtual sink: ${sinkName}`);
+        await execa('pacmd', ['unload-module', `module-virtual-sink`, `sink_name=${sinkName}`]);
 
         console.log(`Generated audio file: ${processedAudioPath}`);
         return processedAudioPath;
@@ -114,7 +127,6 @@ async function generateVideo(text) {
     console.log(`Generated video file: ${videoPath}`);
     return videoPath;
 }
-
 module.exports = {
     generateAudio,
     generateVideo
