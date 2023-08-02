@@ -8,7 +8,7 @@
 
 ## Overview
 
-`docosaisto` is a project that uses a Node.js-based API along and static HTML site to run the MS-DOS Dr. Sbaitso application and return the audio. The project's structure includes the following:
+`docosaisto` is a Node.js-based API and static HTML site designed to run the MS-DOS <a href="https://en.wikipedia.org/wiki/Dr._Sbaitso">Dr. Sbaitso</a> application and return an MP3 of the audio. 
 
 ## Project Structure
 
@@ -37,6 +37,12 @@
 2. Navigate to the project directory.
 3. Run `docker-compose up` to start the Docker containers.
 4. Access the API at the specified endpoint.
+
+
+## To Do
+
+  - Virtual sinks for every request. Currently, unless we set the default sink -- we get no audio.
+
 
 ## Contributing
 
