@@ -1,6 +1,10 @@
-# README.md for docosaisto
+<table align="center">
+  <tr>
+    <td><img src="https://github.com/0xc0re/docosaisto/assets/7865591/a6af4bda-6ed2-4854-9b6e-4d788cb4304c" alt="docosaisto" height="400"></td>
+  </tr>
+</table>
 
-<img src="https://github.com/0xc0re/docosaisto/assets/7865591/a6af4bda-6ed2-4854-9b6e-4d788cb4304c" alt="docosaisto" style="width: 80%; max-width: 600px;">
+# README.md for docosaisto
 
 ## Overview
 
