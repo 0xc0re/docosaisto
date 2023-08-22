@@ -3,67 +3,52 @@ const rimraf = require('rimraf');
 const mkdirp = require('mkdirp');
 const path = require('path');
 const uuid = require('uuid');
+const os = require('os');
 
 async function generateAudio(text) {
-    const requestId = uuid.v4(); // Unique ID for this request
-    const requestPath = `/tmp/sbaitso/${requestId}`;
+    if (typeof text !== 'string' || text.length > 2000) { // simple length check
+        throw new Error("Invalid text input.");
+    }
+
+    const requestId = uuid.v4();
+    const requestPath = path.join(os.tmpdir(), 'sbaitso', requestId);
 
     try {
         console.log(`Starting generation process for request ${requestId}...`);
 
-        // Remove the out dir and make a new one specific to this request
         rimraf.sync(requestPath);
         mkdirp.sync(requestPath);
 
         console.log(`Starting DOSBox to run SAY.BAT with text: "${text}"...`);
-        const dosbox = execa(
-            'dosbox',
-            ['-c', 'mount C sbaitso', '-c', 'C:', '-c', `SAY.BAT "${text}"`],
-            {
-                env: { TERM: 'xterm' },
-            }
-        );
+        const dosbox = execa('dosbox', [
+            '-c', 'mount C sbaitso', '-c', 'C:', '-c', `SAY.BAT "${text}"`
+        ], { env: { TERM: 'xterm' } });
 
-        // Wait for DOSBox to start speaking
         console.log("Waiting for DOSBox to start speaking...");
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // Start the ffmpeg capture to an audio file
         const audioPath = path.join(requestPath, 'out.mp3');
         console.log("Starting the ffmpeg capture to an audio file...");
         const recording = execa('ffmpeg', [
-            '-y',
-            '-f',
-            'pulse',
-            '-i',
-            'v1.monitor',
-            '-c:a',
-            'libmp3lame',
-            audioPath,
+            '-y', '-f', 'pulse', '-i', 'v1.monitor', '-c:a', 'libmp3lame', audioPath
         ]);
-        recording.catch(() => {});
 
-        // Wait for DOSBox to finish and close the recording
         console.log("Waiting for DOSBox to finish...");
         await dosbox;
         recording.kill();
 
-        // Apply a fade-in effect to reduce the pop
         const processedAudioPath = path.join(requestPath, 'processed.mp3');
         console.log("Applying a fade-in effect...");
         await execa('ffmpeg', [
-            '-y',
-            '-i',
-            audioPath,
-            '-af',
-            'afade=in:st=0:d=0.1', // 0.1-second fade-in at the start
-            processedAudioPath,
+            '-y', '-i', audioPath, '-af', 'afade=in:st=0:d=0.1', processedAudioPath
         ]);
 
         console.log(`Generated audio file: ${processedAudioPath}`);
         return processedAudioPath;
+
     } catch (err) {
         console.error("An error occurred:", err);
+        rimraf.sync(requestPath);  // cleanup
         return null;
     }
 }
@@ -76,36 +61,17 @@ async function generateVideo(text) {
     }
 
     const requestId = path.basename(path.dirname(audioPath));
-    const requestPath = `/tmp/sbaitso/${requestId}`;
-    
-    // Path to the sbaitso.png image (update as needed)
+    const requestPath = path.join(os.tmpdir(), 'sbaitso', requestId);
+
     const imagePath = path.join(__dirname, 'sbaitso.png');
 
-    // Create a video with the sbaitso.png image and the generated audio
     const videoPath = path.join(requestPath, 'video.mp4');
     console.log("Creating a video with the image and audio...");
+
     const { stdout, stderr } = await execa('ffmpeg', [
-        '-y',
-        '-loop',
-        '1',
-        '-i',
-        imagePath,
-        '-i',
-        audioPath,
-        '-c:a',
-        'aac',
-        '-strict',
-        '-2',
-        '-b:a',
-        '64k',
-        '-c:v',
-        'libx264',
-        '-b:v',
-        '768K',
-        '-shortest',
-        '-pix_fmt',
-        'yuv420p',
-        videoPath,
+        '-y', '-loop', '1', '-i', imagePath, '-i', audioPath, '-c:a', 'aac', '-strict', 
+        '-2', '-b:a', '64k', '-c:v', 'libx264', '-b:v', '768K', '-shortest', 
+        '-pix_fmt', 'yuv420p', videoPath
     ], { all: true });
 
     console.log(stdout);
